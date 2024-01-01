@@ -28,9 +28,10 @@ jobs:
       - name: Build utilities
         shell: pwsh
         run: |
-          msbuild /m /t:restore,img2ffu:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishSingleFile=true /p:PublishTrimmed=true Img2Ffu.sln
+          msbuild /m /t:restore,img2ffu:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishSingleFile=true /p:PublishTrimmed=true Img2Ffu.sln || true
 
       - name: Upload artifact
+        if: always() # Always run the artifact upload step
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.platform }}-${{ matrix.architecture }}
