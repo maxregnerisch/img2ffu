@@ -15,25 +15,31 @@ namespace Img2Ffu
         {
             Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
             {
-                Logging.Log("img2ffu - Converts Windows Imaging (WIM) files into full flash update (FFU) files");
+                Logging.Log("img2ffu - Converts raw image (img) files into full flash update (FFU) files");
                 Logging.Log("Copyright (c) 2019-2021, Gustave Monce - gus33000.me - @gus33000");
+                Logging.Log("Copyright (c) 2018, Rene Lergner - wpinternals.net - @Heathcliff74xda");
                 Logging.Log("Released under the MIT license at github.com/gus33000/img2ffu");
                 Logging.Log("");
 
                 try
                 {
-                    string wimFilePath = o.WimFile;
-                    string excludedFilePath = o.ExcludedFile;
+                    string filepath = o.ExcludedFile;
 
-                    if (!File.Exists(wimFilePath) || !File.Exists(excludedFilePath))
+                    if (!File.Exists(filepath))
+                    {
+                        filepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), o.ExcludedFile);
+                    }
+
+                    if (!File.Exists(filepath))
                     {
                         Logging.Log("Something happened.", Logging.LoggingLevel.Error);
-                        Logging.Log("Please specify valid paths for the WIM file and the provisioning partition file.", Logging.LoggingLevel.Error);
+                        Logging.Log("We couldn't find the provisioning partition file.", Logging.LoggingLevel.Error);
+                        Logging.Log("Please specify one using the corresponding argument switch", Logging.LoggingLevel.Error);
                         Environment.Exit(1);
                         return;
                     }
 
-                    GenerateFFUFromWIM(wimFilePath, o.FfuFile, o.PlatId, o.ChunkSize, o.Antitheftver, o.Osversion, File.ReadAllLines(excludedFilePath), o.BlankSectorBufferSize);
+                    GenerateFFU(o.ImgFile, o.FfuFile, o.PlatId, o.ChunkSize, o.Antitheftver, o.Osversion, File.ReadAllLines(filepath), o.BlankSectorBufferSize);
                 }
                 catch (Exception ex)
                 {
@@ -44,6 +50,7 @@ namespace Img2Ffu
                 }
             });
         }
+
 
         private static byte[] GenerateCatalogFile(byte[] hashData)
         {
@@ -60,15 +67,7 @@ namespace Img2Ffu
             return catalog;
         }
 
-        private static void GenerateFFUFromWIM(string wimFilePath, string ffuFile, string platformId, uint chunkSize, string antiTheftVersion, string osVersion, string[] excluded, uint blankSectorBufferSize)
-        {
-            // Logic to generate FFU from the WIM file goes here
-            Logging.Log("Input WIM file: " + wimFilePath);
-            Logging.Log("Destination FFU file: " + ffuFile);
-            Logging.Log("Platform ID: " + platformId);
-            Logging.Log("");
-
-         public static byte[] GetResultingBuffer(IEnumerable<FlashingPayload> payloads)
+        private static byte[] GetResultingBuffer(IEnumerable<FlashingPayload> payloads)
         {
             UInt32 WriteDescriptorLength = 0;
             foreach (FlashingPayload payload in payloads)
@@ -97,7 +96,7 @@ namespace Img2Ffu
             return descriptorsBuffer;
         }
 
-         public static void GenerateFFU(string ImageFile, string FFUFile, string PlatformId, UInt32 chunkSize, string AntiTheftVersion, string Osversion, string[] excluded, UInt32 BlankSectorBufferSize)
+        private static void GenerateFFU(string ImageFile, string FFUFile, string PlatformId, UInt32 chunkSize, string AntiTheftVersion, string Osversion, string[] excluded, UInt32 BlankSectorBufferSize)
         {
             Logging.Log("Input image: " + ImageFile);
             Logging.Log("Destination image: " + FFUFile);
@@ -325,7 +324,7 @@ namespace Img2Ffu
             Logging.Log("");
         }
 
-        public static void RoundUpToChunks(Stream stream, UInt32 chunkSize)
+        private static void RoundUpToChunks(Stream stream, UInt32 chunkSize)
         {
             Int64 Size = stream.Length;
             if ((Size % chunkSize) > 0)
@@ -335,7 +334,7 @@ namespace Img2Ffu
             }
         }
 
-        public static void ShowProgress(ulong totalBytes, DateTime startTime, ulong BytesRead, ulong SourcePosition, bool DisplayRed)
+        private static void ShowProgress(ulong totalBytes, DateTime startTime, ulong BytesRead, ulong SourcePosition, bool DisplayRed)
         {
             var now = DateTime.Now;
             var timeSoFar = now - startTime;
@@ -347,7 +346,7 @@ namespace Img2Ffu
             Logging.Log(string.Format("{0} {1}MB/s {2:hh\\:mm\\:ss\\.f}", GetDismLikeProgBar(int.Parse((BytesRead * 100 / totalBytes).ToString())), speed.ToString(), remaining, remaining.TotalHours, remaining.Minutes, remaining.Seconds, remaining.Milliseconds), returnline: false, severity: DisplayRed ? Logging.LoggingLevel.Warning : Logging.LoggingLevel.Information);
         }
 
-        public static string GetDismLikeProgBar(int perc)
+        private static string GetDismLikeProgBar(int perc)
         {
             var eqsLength = (int)((double)perc / 100 * 55);
             var bases = new string('=', eqsLength) + new string(' ', 55 - eqsLength);
@@ -359,10 +358,10 @@ namespace Img2Ffu
             return "[" + bases + "]";
         }
 
-         internal class Options
+        internal class Options
         {
-            [Option('w', "wim-file", HelpText = @"A path to the WIM file to convert", Required = true)]
-            public string WimFile { get; set; }
+            [Option('i', "img-file", HelpText = @"A path to the img file to convert *OR* a PhysicalDisk path. i.e. \\.\PhysicalDrive1", Required = true)]
+            public string ImgFile { get; set; }
 
             [Option('f', "ffu-file", HelpText = "A path to the FFU file to output", Required = true)]
             public string FfuFile { get; set; }
