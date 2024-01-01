@@ -25,10 +25,11 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Build utilities
-        shell: pwsh
-        run: |
-          msbuild /m /t:restore,img2ffu:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishSingleFile=true /p:PublishTrimmed=true Img2Ffu.sln || true
+     - name: Build utilities
+  shell: pwsh
+  continue-on-error: true  # Continue the workflow even if this step fails
+  run: |
+    msbuild /m /t:restore,img2ffu:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishSingleFile=true /p:PublishTrimmed=true Img2Ffu.sln
 
       - name: Upload artifact
         if: always() # Always run the artifact upload step
