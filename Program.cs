@@ -68,7 +68,7 @@ namespace Img2Ffu
             Logging.Log("Platform ID: " + platformId);
             Logging.Log("");
 
-        private static byte[] GetResultingBuffer(IEnumerable<FlashingPayload> payloads)
+         public static byte[] GetResultingBuffer(IEnumerable<FlashingPayload> payloads)
         {
             UInt32 WriteDescriptorLength = 0;
             foreach (FlashingPayload payload in payloads)
@@ -97,7 +97,7 @@ namespace Img2Ffu
             return descriptorsBuffer;
         }
 
-        private static void GenerateFFU(string ImageFile, string FFUFile, string PlatformId, UInt32 chunkSize, string AntiTheftVersion, string Osversion, string[] excluded, UInt32 BlankSectorBufferSize)
+         public static void GenerateFFU(string ImageFile, string FFUFile, string PlatformId, UInt32 chunkSize, string AntiTheftVersion, string Osversion, string[] excluded, UInt32 BlankSectorBufferSize)
         {
             Logging.Log("Input image: " + ImageFile);
             Logging.Log("Destination image: " + FFUFile);
@@ -325,7 +325,7 @@ namespace Img2Ffu
             Logging.Log("");
         }
 
-        private static void RoundUpToChunks(Stream stream, UInt32 chunkSize)
+        public static void RoundUpToChunks(Stream stream, UInt32 chunkSize)
         {
             Int64 Size = stream.Length;
             if ((Size % chunkSize) > 0)
@@ -335,7 +335,7 @@ namespace Img2Ffu
             }
         }
 
-        private static void ShowProgress(ulong totalBytes, DateTime startTime, ulong BytesRead, ulong SourcePosition, bool DisplayRed)
+        public static void ShowProgress(ulong totalBytes, DateTime startTime, ulong BytesRead, ulong SourcePosition, bool DisplayRed)
         {
             var now = DateTime.Now;
             var timeSoFar = now - startTime;
@@ -347,7 +347,7 @@ namespace Img2Ffu
             Logging.Log(string.Format("{0} {1}MB/s {2:hh\\:mm\\:ss\\.f}", GetDismLikeProgBar(int.Parse((BytesRead * 100 / totalBytes).ToString())), speed.ToString(), remaining, remaining.TotalHours, remaining.Minutes, remaining.Seconds, remaining.Milliseconds), returnline: false, severity: DisplayRed ? Logging.LoggingLevel.Warning : Logging.LoggingLevel.Information);
         }
 
-        private static string GetDismLikeProgBar(int perc)
+        public static string GetDismLikeProgBar(int perc)
         {
             var eqsLength = (int)((double)perc / 100 * 55);
             var bases = new string('=', eqsLength) + new string(' ', 55 - eqsLength);
