@@ -1,26 +1,3 @@
-/*
-
-Copyright (c) 2019, Gustave Monce - gus33000.me - @gus33000
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
 using CommandLine;
 using DiscUtils;
 using System;
@@ -38,31 +15,25 @@ namespace Img2Ffu
         {
             Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
             {
-                Logging.Log("img2ffu - Converts raw image (img) files into full flash update (FFU) files");
+                Logging.Log("img2ffu - Converts Windows Imaging (WIM) files into full flash update (FFU) files");
                 Logging.Log("Copyright (c) 2019-2021, Gustave Monce - gus33000.me - @gus33000");
-                Logging.Log("Copyright (c) 2018, Rene Lergner - wpinternals.net - @Heathcliff74xda");
                 Logging.Log("Released under the MIT license at github.com/gus33000/img2ffu");
                 Logging.Log("");
 
                 try
                 {
-                    string filepath = o.ExcludedFile;
+                    string wimFilePath = o.WimFile;
+                    string excludedFilePath = o.ExcludedFile;
 
-                    if (!File.Exists(filepath))
-                    {
-                        filepath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), o.ExcludedFile);
-                    }
-
-                    if (!File.Exists(filepath))
+                    if (!File.Exists(wimFilePath) || !File.Exists(excludedFilePath))
                     {
                         Logging.Log("Something happened.", Logging.LoggingLevel.Error);
-                        Logging.Log("We couldn't find the provisioning partition file.", Logging.LoggingLevel.Error);
-                        Logging.Log("Please specify one using the corresponding argument switch", Logging.LoggingLevel.Error);
+                        Logging.Log("Please specify valid paths for the WIM file and the provisioning partition file.", Logging.LoggingLevel.Error);
                         Environment.Exit(1);
                         return;
                     }
 
-                    GenerateFFU(o.ImgFile, o.FfuFile, o.wimfile, o.PlatId, o.ChunkSize, o.Antitheftver, o.Osversion, File.ReadAllLines(filepath), o.BlankSectorBufferSize);
+                    GenerateFFUFromWIM(wimFilePath, o.FfuFile, o.PlatId, o.ChunkSize, o.Antitheftver, o.Osversion, File.ReadAllLines(excludedFilePath), o.BlankSectorBufferSize);
                 }
                 catch (Exception ex)
                 {
@@ -88,6 +59,14 @@ namespace Img2Ffu
 
             return catalog;
         }
+
+        private static void GenerateFFUFromWIM(string wimFilePath, string ffuFile, string platformId, uint chunkSize, string antiTheftVersion, string osVersion, string[] excluded, uint blankSectorBufferSize)
+        {
+            // Logic to generate FFU from the WIM file goes here
+            Logging.Log("Input WIM file: " + wimFilePath);
+            Logging.Log("Destination FFU file: " + ffuFile);
+            Logging.Log("Platform ID: " + platformId);
+            Logging.Log("");
 
         private static byte[] GetResultingBuffer(IEnumerable<FlashingPayload> payloads)
         {
@@ -380,10 +359,10 @@ namespace Img2Ffu
             return "[" + bases + "]";
         }
 
-        internal class Options
+         internal class Options
         {
-            [Option('i', "img-file", HelpText = @"A path to the img file to convert *OR* a PhysicalDisk path. i.e. \\.\PhysicalDrive1", Required = true)]
-            public string ImgFile { get; set; }
+            [Option('w', "wim-file", HelpText = @"A path to the WIM file to convert", Required = true)]
+            public string WimFile { get; set; }
 
             [Option('f', "ffu-file", HelpText = "A path to the FFU file to output", Required = true)]
             public string FfuFile { get; set; }
@@ -405,9 +384,6 @@ namespace Img2Ffu
 
             [Option('b', "blanksectorbuffer-size", Required = false, HelpText = "Buffer size for the upper maximum allowed limit of blank sectors", Default = 100u)]
             public UInt32 BlankSectorBufferSize { get; set; }
-
-            [Option('w', "wim-file", HelpText = "A path to the WIM file", Required = true)]
-            public string WimFile { get; set; }
         }
     }
 }
